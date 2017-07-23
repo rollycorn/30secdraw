@@ -17,9 +17,9 @@ import os
 
 class MainWindow():
 
-  width = 400
-  height = 300
-  change_ms = 30000
+  width = 140
+  height = 100
+  change_ms = 300
 
   #----------------
 
@@ -98,6 +98,8 @@ class MainWindow():
       idx = math.floor(len(folders)*random.random())
       folder = folders[idx]
       print( 'LS: ' + folder )
+      if os.path.isdir( folder ) == False:
+        continue
 
       # select random file
       files = os.listdir( folder )
