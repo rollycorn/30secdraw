@@ -15,11 +15,13 @@ import random
 import media
 import os
 
+ENABLE_CROP = True
+
 class MainWindow():
 
-  width = 140
-  height = 100
-  change_ms = 300
+  width = 300
+  height = 300
+  change_ms = 30000
 
   #----------------
 
@@ -57,19 +59,41 @@ class MainWindow():
     # read image
     canvas = Canvas( root, width=self.width, height=self.height )
     pil_img = Image.open( self.nextFile() )
-    pil_img.thumbnail((self.width,self.height), Image.ANTIALIAS)
-    pil_canvas = Image.new( 'RGB', (self.width,self.height), (255,255,255) )
 
-    # fit into window
+    # transformation
+    pil_w, pil_h = pil_img.size
+    pil_ratio = math.pow( 10, random.uniform(-0.7,0) )
+    if ENABLE_CROP == True:
+      # random crop
+      crop_rect_size = pil_ratio * max( pil_w, pil_h )
+      crop_w = min( pil_w, crop_rect_size )
+      crop_h = min( pil_h, crop_rect_size )
+      crop_left = max( 0, pil_w - crop_rect_size ) * random.random() 
+      crop_upper = max( 0, pil_h - crop_rect_size ) * random.random()
+      crop_right = crop_left + crop_w
+      crop_lower = crop_upper + crop_h
+      xform_ratio = min( self.width/crop_w, self.height/crop_h )
+      xform_w = math.floor(crop_w * xform_ratio)
+      xform_h = math.floor(crop_h * xform_ratio)
+      pil_img2 = pil_img.transform((xform_w, xform_h), Image.EXTENT, (crop_left, crop_upper, crop_right, crop_lower), Image.BILINEAR )
+    else :
+      # fit to window
+      pil_img.thumbnail((self.width,self.height), Image.BILINEAR)
+      pil_img2 = pil_img
+
+    # centering
     top = 0
     left = 0
-    if pil_img.size[0] / pil_img.size[1] > self.width / self.height:
+    if pil_img2.size[0] / pil_img2.size[1] > self.width / self.height:
       left = 0
-      top = math.floor( ( self.height - pil_img.size[1] ) / 2 )
+      top = math.floor( ( self.height - pil_img2.size[1] ) / 2 )
     else:
-      left = math.floor( ( self.width - pil_img.size[0] ) / 2 )
+      left = math.floor( ( self.width - pil_img2.size[0] ) / 2 )
       top = 0
-    pil_canvas.paste( pil_img, (left,top) )
+
+    # paste
+    pil_canvas = Image.new( 'RGB', (self.width,self.height), (255,255,255) )
+    pil_canvas.paste( pil_img2, (left,top) )
 
     return ImageTk.PhotoImage(pil_canvas)
 
